@@ -1,7 +1,13 @@
 import torch
 import torch.nn as nn
-
+from collections import namedtuple
 from .vgg import VGG19
+
+
+vgg_multiplier = namedtuple("VggOutputs", ['relu1_2', 'relu2_2',
+                                           'relu3_4', 'relu4_4', 'relu5_4'])
+mutiplers = vgg_multiplier(1, 2, 4, 8, 16)
+
 
 class WarpNet(nn.Module):
     def __init__(self,
@@ -14,7 +20,11 @@ class WarpNet(nn.Module):
                  reg_normalization=True):
         
         super(WarpNet, self).__init__()
-        self.corr_out_size = int((size/2**3)**2)
+        
+        # set corr out size connector 
+        m = getattr(mutiplers, vgg_layer)
+        self.corr_out_size = int((size/m)**2)
+        print(m, self.corr_out_size)
 
         self.ext = Extraction(vgg_layer=vgg_layer)
         self.cor = Correlation(normalization=corr_normalize, matching_type=matching_type)        

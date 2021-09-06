@@ -16,13 +16,13 @@ dataloader:
   num_workers: 4
 
 model:
-  vgg_layer: 'relu4_4'
-  corr_normalize: True
+  vgg_layer: 'relu5_4'
+  corr_normalize: False
   matching_type: 'correlation'
   size: 1024
   output_theta: 6
   fr_channels: [225, 128, 64, 32]
-  reg_normalization: True
+  reg_normalization: True      # this assumes much memory
 
 trainer:                       # TODO main trainer lightning module params
   gpus: 1
