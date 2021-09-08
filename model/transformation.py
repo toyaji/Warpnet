@@ -27,8 +27,7 @@ class GeometricTnf(nn.Module):
                  geometric_model='affine', 
                  tps_grid_size=3, 
                  tps_reg_factor=0, 
-                 size=240, 
-                 offset_factor=None, 
+                 size=240,
                  padding_factor=1.0, 
                  crop_factor=1.0):
 
@@ -39,22 +38,16 @@ class GeometricTnf(nn.Module):
             self.out_h, self.out_w = size 
 
         self.geometric_model = geometric_model
-        self.offset_factor = offset_factor
         self.padding_factor = padding_factor
         self.crop_factor = crop_factor
         
-        if geometric_model=='affine' and offset_factor is None:
+        if geometric_model=='affine':
             self.gridGen = AffineGridGen(out_h=self.out_h, out_w=self.out_w)
-        elif geometric_model=='affine' and offset_factor is not None:
-            self.gridGen = AffineGridGenV2(out_h=self.out_h, out_w=self.out_w)
         elif geometric_model=='hom':
             self.gridGen = HomographyGridGen(out_h=self.out_h, out_w=self.out_w)
         elif geometric_model=='tps':
             self.gridGen = TpsGridGen(out_h=self.out_h, out_w=self.out_w, grid_size=tps_grid_size, 
-                                      reg_factor=tps_reg_factor)
-        if offset_factor is not None:
-            self.gridGen.grid_X=self.gridGen.grid_X/offset_factor
-            self.gridGen.grid_Y=self.gridGen.grid_Y/offset_factor   
+                                      reg_factor=tps_reg_factor) 
             
         self.register_buffer(
             name='theta_identity',
@@ -66,16 +59,16 @@ class GeometricTnf(nn.Module):
         if theta is None:
             theta = self.theta_identity
             theta = theta.expand(b,2,3).contiguous()
+            
         grid = self.gridGen(theta)
 
         # rescale grid according to crop_factor and padding_factor
         if self.padding_factor != 1 or self.crop_factor !=1:
             grid = grid*(self.padding_factor*self.crop_factor)
         # rescale grid according to offset_factor
-        if self.offset_factor is not None:
-            grid = grid*self.offset_factor
 
-        return F.grid_sample(x, grid, align_corners=True)
+        rois =  F.grid_sample(x, grid, align_corners=True)
+        return rois
 
 class AffineGridGen(nn.Module):
     def __init__(self, out_h=240, out_w=240, out_ch = 3):
@@ -92,41 +85,6 @@ class AffineGridGen(nn.Module):
         batch_size = theta.size()[0]
         out_size = torch.Size((batch_size,self.out_ch,self.out_h,self.out_w))
         return F.affine_grid(theta, out_size, align_corners=True)
-    
-class AffineGridGenV2(nn.Module):
-    def __init__(self, out_h=240, out_w=240):
-        super(AffineGridGenV2, self).__init__()        
-        self.out_h, self.out_w = out_h, out_w
-
-        # create grid in numpy
-        # self.grid = np.zeros( [self.out_h, self.out_w, 3], dtype=np.float32)
-        # sampling grid with dim-0 coords (Y)
-        self.grid_X,self.grid_Y = np.meshgrid(np.linspace(-1,1,out_w),np.linspace(-1,1,out_h))
-        # grid_X,grid_Y: size [1,H,W,1,1]
-        self.grid_X = torch.FloatTensor(self.grid_X).unsqueeze(0).unsqueeze(3)
-        self.grid_Y = torch.FloatTensor(self.grid_Y).unsqueeze(0).unsqueeze(3)
-        self.grid_X = Variable(self.grid_X,requires_grad=False)
-        self.grid_Y = Variable(self.grid_Y,requires_grad=False)
-            
-    def forward(self, theta):
-        b=theta.size(0)
-        if not theta.size()==(b,6):
-            theta = theta.view(b,6)
-            theta = theta.contiguous()
-            
-        t0=theta[:,0].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-        t1=theta[:,1].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-        t2=theta[:,2].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-        t3=theta[:,3].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-        t4=theta[:,4].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-        t5=theta[:,5].unsqueeze(1).unsqueeze(2).unsqueeze(3)
-
-        grid_X = expand_dim(self.grid_X,0,b)
-        grid_Y = expand_dim(self.grid_Y,0,b)
-        grid_Xp = grid_X*t0 + grid_Y*t1 + t2
-        grid_Yp = grid_X*t3 + grid_Y*t4 + t5
-        
-        return torch.cat((grid_Xp,grid_Yp),3)
 
 class HomographyGridGen(nn.Module):
     def __init__(self, out_h=240, out_w=240):

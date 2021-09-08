@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 from collections import namedtuple
 from .vgg import VGG19
-
+from .transformation import GeometricTnf
 
 vgg_multiplier = namedtuple("VggOutputs", ['relu1_2', 'relu2_2',
                                            'relu3_4', 'relu4_4', 'relu5_4'])
-mutiplers = vgg_multiplier(1, 2, 4, 8, 16)
+mutipliers = vgg_multiplier(1, 2, 4, 8, 16)
 
 
 class WarpNet(nn.Module):
@@ -22,23 +22,26 @@ class WarpNet(nn.Module):
         super(WarpNet, self).__init__()
         
         # set corr out size connector 
-        m = getattr(mutiplers, vgg_layer)
+        m = getattr(mutipliers, vgg_layer)
         self.corr_out_size = int((size/m)**2)
-        print(m, self.corr_out_size)
 
+        # set conv layers for each steps
         self.ext = Extraction(vgg_layer=vgg_layer)
         self.cor = Correlation(normalization=corr_normalize, matching_type=matching_type)        
         self.reg = Regression(input_size=self.corr_out_size,
                               output_dim=output_theta,
                               channels=fr_channels,
                               normalization=reg_normalization)
+        self.transformer = GeometricTnf('affine', size=size)
 
     def forward(self, x, y):
+        origin = x.clone().detach()
         x, y = self.ext(x, y)
         corr = self.cor(x, y)
         theta = self.reg(corr)
-    
-        return theta
+        warped = self.transformer(origin, theta)
+        
+        return warped
 
 
 class Extraction(nn.Module):
@@ -132,7 +135,7 @@ class Regression(nn.Module):
         # to make adaptive to input size change
         self.connector = nn.Sequential(
             nn.Conv2d(input_size, 225, kernel_size=3, padding=1),
-            nn.BatchNorm2d(225),
+            nn.BatchNorm2d(225, track_running_stats=False),
             nn.ReLU())
 
         nn_modules = list()
@@ -141,7 +144,7 @@ class Regression(nn.Module):
             ch_out = channels[i+1]            
             nn_modules.append(nn.Conv2d(ch_in, ch_out, kernel_size=3, padding=1))
             if normalization:
-                nn_modules.append(nn.BatchNorm2d(ch_out))
+                nn_modules.append(nn.BatchNorm2d(ch_out, track_running_stats=False))
             nn_modules.append(nn.ReLU())
         self.body = nn.Sequential(*nn_modules)
 

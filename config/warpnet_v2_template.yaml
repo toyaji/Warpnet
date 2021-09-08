@@ -1,12 +1,11 @@
 log:
-  name: '20210831'
+  name: '20210907'
   version: 'test_1'
 
 dataset:
   data_dir: 'C:/Users/happy/Documents/jupyter scripts/SRraw/NLST/dataset/SRRAW'
   get_from_dir: "cropped"     # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
-  scale_idx: [1, 2]            # scale index (ex. 00001, 00002, 00003). First will be ref(target) 
   patch_size: 1024          # -1 for full size image (no crop)
   raw_image: False             # if True, belowing in_channel param sould be 4
 
@@ -26,8 +25,10 @@ model:
 
 trainer:                       # TODO main trainer lightning module params
   gpus: 1
-  max_epochs: 1
-  accumulate_grad_batches: 1
+  max_epochs: 10
+  accumulate_grad_batches: 3
   check_val_every_n_epoch: 1
   gradient_clip_val: 0.5
   log_every_n_steps: 10
+  flush_logs_every_n_steps: 10
+  #fast_dev_run: 100           # This is for test - it will cause error for validation step

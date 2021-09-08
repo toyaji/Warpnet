@@ -1,6 +1,7 @@
 # Log files
 /lightning_logs
 /logs
+/obj_log
 
 # Dataset
 /dataset

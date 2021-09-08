@@ -1,11 +1,11 @@
 from numpy import frexp
 import torch
 import pytorch_lightning as pl
+
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchmetrics.image import PSNR, SSIM
 from model.warpnet import WarpNet
-from model.transformation import GeometricTnf
 import gc
 
 
@@ -14,7 +14,6 @@ class WarpModel(pl.LightningModule):
         super().__init__()
         # load the model
         self.model = WarpNet(**model_params)
-        self.transformer = GeometricTnf('affine', size=model_params.size)
 
         # set dataloader paramters
         self.batch_size = loader_params.batch_size
@@ -29,48 +28,35 @@ class WarpModel(pl.LightningModule):
         self.valid_psnr = psnr.clone()
         self.valid_ssim = ssim.clone()
 
-    def forward(self, x, y):
-        return self.model(x, y)
-
     def configure_optimizers(self):
         # TODO params 분리되 되는듯... 여기다가 앞에 CNN gep 붙이는거 붙여되 되겠네
-        optimazier = torch.optim.Adam(self.parameters(), lr=1e-3)
+        optimazier = torch.optim.Adam(self.parameters(), lr=1e-5)
         return optimazier
 
     def training_step(self, batch, batch_idx):
         y, x = batch
-        # my dataloader get 6 pairs of image crops per iteration
-        if len(x.size()) > 4:
-            b, ncrops, c, h, w = x.size()
-            x = x.view(-1, c, h, w)
-            y = y.view(-1, c, h, w)
-
-        theta = self.model(x, y)
-        aligned = self.transformer(x, theta)
+        aligned = self.model(x, y)
         loss = F.mse_loss(aligned, y)
-        self.train_psnr(aligned, y)
-        self.train_ssim(aligned, y)
-        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log('train_psnr', self.train_psnr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log('train_ssim', self.train_ssim, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+
+        # following code is for memory leak debug
+        """
+        f = open("obj_log/iter_{}.txt".format(batch_idx), "w")
+        for obj in gc.get_objects():
+            try:
+                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                    if  len(obj.size()) > 0:
+                        #print(type(obj), obj.size())
+                        f.write("{}, {} \n".format(type(obj), obj.size()))
+            except: pass
+        f.close()
+        """
+
         return loss
 
     def validation_step(self, batch, batch_idx):
         y, x = batch
-        # my dataloader get 6 pairs of image crops per iteration
-        if len(x.size()) > 4:
-            b, ncrops, c, h, w = x.size()
-            x = x.view(-1, c, h, w)
-            y = y.view(-1, c, h, w)
-
-        theta = self.model(x, y)
-        aligned = self.transformer(x, theta)
+        aligned = self.model(x, y)
         loss = F.mse_loss(aligned, y)
-        self.valid_psnr(aligned, y)
-        self.valid_ssim(aligned, y)
-        self.log('valid_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log('valid_psnr', self.valid_psnr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log('valid_ssim', self.valid_psnr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def set_dataset(self, train_set, val_set, test_set):

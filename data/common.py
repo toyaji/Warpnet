@@ -19,6 +19,15 @@ def get_identical_patches(imgs, patch_size):
         imgs.append(imgs[i][iy:iy + tp, ix:ix + tp, :])
     return imgs
 
+def get_random_patch(hr, lr, patch_size):
+    ih, iw = hr.shape[:2]
+    tp = patch_size
+    ix = np.random.randint(0, iw - patch_size)
+    iy = np.random.randint(0, ih - patch_size)
+    hr = hr[iy:iy + tp, ix:ix + tp, :]
+    lr = lr[iy:iy + tp, ix:ix + tp, :]
+    return hr, lr
+
 def get_random_patches(hr, lrs, patch_size):
     """Get patches of different random fov for each scale of image"""
     def _get_random_patch(hr, lr, patch_size):
@@ -29,7 +38,7 @@ def get_random_patches(hr, lrs, patch_size):
         hr = hr[iy:iy + tp, ix:ix + tp, :]
         lr = lr[iy:iy + tp, ix:ix + tp, :]
         return hr, lr
-    
+
     hrs = []
     for i, lr in enumerate(lrs):
         h, l = _get_random_patch(hr, lr, patch_size)
@@ -37,9 +46,6 @@ def get_random_patches(hr, lrs, patch_size):
         lrs[i] = l
     return hrs, lrs
 
-def get_trimed_img(hr, lrs, size):
-
-    return NotImplementedError
 
 def set_channel(l, n_channel):
     def _set_channel(img):
@@ -61,7 +67,6 @@ def np2Tensor(l, rgb_range):
         np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
         tensor = torch.from_numpy(np_transpose).float()
         tensor.mul_(rgb_range / 255)
-
         return tensor
 
     return [_np2Tensor(_l) for _l in l]

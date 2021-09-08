@@ -12,10 +12,10 @@ class ZoomLZoomData(Dataset):
     This data class return data pair which consist of 7 images having different resolution  
     
     """
-    def __init__(self, args, train: bool = True) -> None:
+    def __init__(self, args, scale_idx=(1,2), train: bool = True) -> None:
         super().__init__()
         self.patch_size = args.patch_size
-        self.scale_idx = args.scale_idx
+        self.scale_idx = scale_idx
         self.get_from_dir = args.get_from_dir
         self.img_ext = args.img_ext
         self.train = train
@@ -23,16 +23,9 @@ class ZoomLZoomData(Dataset):
         self._set_filesystem(args.data_dir)
 
     def __getitem__(self, idx):
-        lrs = self._scan(idx, self.scale_idx)
-        hr = lrs.pop(0)
-        # get patch or just give full size image
-        if self.patch_size == -1:
-            hrs, lrs = common.get_trimed_img(hr, lrs)
-        else:
-            hrs, lrs = common.get_random_patches(hr, lrs, self.patch_size)
-        hrs = torch.stack(common.np2Tensor(hrs, 255)) # size -> (6, 3, H, W)
-        lrs = torch.stack(common.np2Tensor(lrs, 255))
-        return hrs, lrs
+        hr, lr = self._scan(idx)
+        hr, lr = common.get_random_patch(hr, lr, self.patch_size)
+        return common.np2Tensor([hr, lr], 255)
 
     def __len__(self):
         return len(self.base_paths)
@@ -48,11 +41,14 @@ class ZoomLZoomData(Dataset):
         else:
             self.base_paths = sorted(list((self.apath / "test").glob("*")))
     
-    def _scan(self, idx, scale_idx=[1, 2]):
+    def _scan(self, idx):
+        (target_idx, source_idx) = self.scale_idx
         base_path = self.base_paths[idx] / self.get_from_dir
-        imgs_path = [base_path / "{:05d}.{}".format(i, self.img_ext) for i in scale_idx]
-        lrs = [cv2.imread(str(path)) for path in imgs_path]
-        return lrs
+        target_path = base_path / "{:05d}.{}".format(target_idx, self.img_ext)
+        source_path = base_path / "{:05d}.{}".format(source_idx, self.img_ext)
+        hr = cv2.imread(str(target_path))
+        lr = cv2.imread(str(source_path))
+        return hr, lr
 
     def _get_focalscale(self, idx):
         ref_paths = self.base_paths[idx].glob("*.JPG")
