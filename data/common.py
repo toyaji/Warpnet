@@ -20,7 +20,13 @@ def get_identical_patches(imgs, patch_size):
     return imgs
 
 def get_random_patch(hr, lr, patch_size):
-    ih, iw = hr.shape[:2]
+    # some input images have little bit different size so we need to consider that
+    ih1, iw1 = hr.shape[:2]
+    ih2, iw2  =lr.shape[:2]
+    ih = min(ih1, ih2)
+    iw = min(iw1, iw2)
+
+    # get patch by random crop
     tp = patch_size
     ix = np.random.randint(0, iw - patch_size)
     iy = np.random.randint(0, ih - patch_size)

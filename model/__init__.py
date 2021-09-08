@@ -1,12 +1,9 @@
-from numpy import frexp
 import torch
 import pytorch_lightning as pl
 
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from torchmetrics.image import PSNR, SSIM
 from model.warpnet import WarpNet
-import gc
 
 
 class WarpModel(pl.LightningModule):
@@ -19,18 +16,11 @@ class WarpModel(pl.LightningModule):
         self.batch_size = loader_params.batch_size
         self.num_workers = loader_params.num_workers
         self.shuffle = loader_params.shuffle
-
-        # set metrices to evaluate performence
-        # TODO 다른 metrics 추가해야함... 모듈 만들던지 해서
-        psnr = PSNR(); ssim = SSIM()
-        self.train_psnr = psnr.clone()
-        self.train_ssim = ssim.clone()
-        self.valid_psnr = psnr.clone()
-        self.valid_ssim = ssim.clone()
+        self.lr = loader_params.learning_rate
 
     def configure_optimizers(self):
         # TODO params 분리되 되는듯... 여기다가 앞에 CNN gep 붙이는거 붙여되 되겠네
-        optimazier = torch.optim.Adam(self.parameters(), lr=1e-5)
+        optimazier = torch.optim.Adam(self.parameters(), lr=self.lr)
         return optimazier
 
     def training_step(self, batch, batch_idx):
@@ -50,13 +40,14 @@ class WarpModel(pl.LightningModule):
             except: pass
         f.close()
         """
-
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         y, x = batch
         aligned = self.model(x, y)
         loss = F.mse_loss(aligned, y)
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def set_dataset(self, train_set, val_set, test_set):

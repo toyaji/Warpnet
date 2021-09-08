@@ -1,6 +1,6 @@
 log:
-  name: '20210907'
-  version: 'test_1'
+  name: '20210908'
+  version: 'working_v1'
 
 dataset:
   data_dir: 'C:/Users/happy/Documents/jupyter scripts/SRraw/NLST/dataset/SRRAW'
@@ -13,6 +13,7 @@ dataloader:
   batch_size: 2
   shuffle: True
   num_workers: 4
+  learning_rate: 1.0e-8
 
 model:
   vgg_layer: 'relu5_4'
@@ -26,9 +27,9 @@ model:
 trainer:                       # TODO main trainer lightning module params
   gpus: 1
   max_epochs: 10
-  accumulate_grad_batches: 3
-  check_val_every_n_epoch: 1
+  accumulate_grad_batches: 5
   gradient_clip_val: 0.5
   log_every_n_steps: 10
-  flush_logs_every_n_steps: 10
+  flush_logs_every_n_steps: 100
+  auto_lr_find: True
   #fast_dev_run: 100           # This is for test - it will cause error for validation step
