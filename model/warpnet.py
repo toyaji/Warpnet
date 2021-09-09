@@ -32,16 +32,14 @@ class WarpNet(nn.Module):
                               output_dim=output_theta,
                               channels=fr_channels,
                               normalization=reg_normalization)
-        self.transformer = GeometricTnf('affine', size=size)
+        
 
     def forward(self, x, y):
-        origin = x.clone().detach()
         x, y = self.ext(x, y)
         corr = self.cor(x, y)
         theta = self.reg(corr)
-        warped = self.transformer(origin, theta)
         
-        return warped
+        return theta
 
 
 class Extraction(nn.Module):

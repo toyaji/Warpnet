@@ -5,8 +5,6 @@ import skimage.color as sc
 from PIL import Image
 from pathlib import Path
 import torch
-from torch._C import ErrorReport
-
 
 def get_identical_patches(imgs, patch_size):
     """Get patches of same fov from all scales of images"""

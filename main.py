@@ -22,7 +22,7 @@ def main(config):
     train_set, val_set = random_split(train_set, length)
 
     # load pytorch lightning model - TODO 요 부분 argparser 로 모델명 받게하기
-    model = WarpModel(config.model, config.dataloader)
+    model = WarpModel(config.model, config.dataloader, config.loss)
     model.set_dataset(train_set, val_set, test_set)
 
     # instantiate trainer

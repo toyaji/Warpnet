@@ -32,4 +32,7 @@ trainer:                       # TODO main trainer lightning module params
   log_every_n_steps: 10
   flush_logs_every_n_steps: 100
   auto_lr_find: True
-  #fast_dev_run: 100           # This is for test - it will cause error for validation step
+  #fast_dev_run: 1          # This is for test - it will cause error for validation step
+
+loss:
+  l2_lambda: 0.3            # set for l2 regularization on theta size
