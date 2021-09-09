@@ -18,6 +18,8 @@ class ZoomLZoomData(Dataset):
         self.scale_idx = scale_idx
         self.get_from_dir = args.get_from_dir
         self.img_ext = args.img_ext
+        self.gray_scale = args.gray_scale
+        self.reduce_size = args.reduce_size
         self.train = train
 
         self._set_filesystem(args.data_dir)
@@ -25,6 +27,10 @@ class ZoomLZoomData(Dataset):
     def __getitem__(self, idx):
         hr, lr = self._scan(idx)
         hr, lr = common.get_random_patch(hr, lr, self.patch_size)
+        # to reduce computational cost, we can consider reduce the size of inputs
+        if self.reduce_size != 1:
+            hr = cv2.resize(hr, dsize=(0, 0), fx=self.reduce_size, fy=self.reduce_size, interpolation=cv2.INTER_LINEAR)
+            lr = cv2.resize(lr, dsize=(0, 0), fx=self.reduce_size, fy=self.reduce_size, interpolation=cv2.INTER_LINEAR)
         return common.np2Tensor([hr, lr], 255)
 
     def __len__(self):
@@ -42,13 +48,19 @@ class ZoomLZoomData(Dataset):
             self.base_paths = sorted(list((self.apath / "test").glob("*")))
     
     def _scan(self, idx):
-        # TODO gray scale 로 읽고 사이즈 줄여서 학습속도 빠르게 해보기
         (target_idx, source_idx) = self.scale_idx
         base_path = self.base_paths[idx] / self.get_from_dir
         target_path = base_path / "{:05d}.{}".format(target_idx, self.img_ext)
         source_path = base_path / "{:05d}.{}".format(source_idx, self.img_ext)
-        hr = cv2.imread(str(target_path))
-        lr = cv2.imread(str(source_path))
+        # gray scale or RGB according to args setting
+        if self.gray_scale:
+            hr = cv2.imread(str(target_path), cv2.IMREAD_GRAYSCALE)
+            lr = cv2.imread(str(source_path), cv2.IMREAD_GRAYSCALE)
+            hr = np.expand_dims(hr, 2)
+            lr = np.expand_dims(lr, 2)
+        else:
+            hr = cv2.imread(str(target_path))
+            lr = cv2.imread(str(source_path)) 
         return hr, lr
 
     def _get_focalscale(self, idx):

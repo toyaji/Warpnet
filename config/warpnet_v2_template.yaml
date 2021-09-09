@@ -6,8 +6,10 @@ dataset:
   data_dir: 'C:/Users/happy/Documents/jupyter scripts/SRraw/NLST/dataset/SRRAW'
   get_from_dir: "cropped"      # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
+  gray_scale: False            # TODO it does not work now for vgg layer only takes rgb channel 
   patch_size: 1024             # -1 for full size image (no crop)
   raw_image: False             # if True, belowing in_channel param sould be 4
+  reduce_size: 0.5
 
 dataloader:
   batch_size: 2
@@ -19,14 +21,14 @@ model:
   vgg_layer: 'relu5_4'
   corr_normalize: False
   matching_type: 'correlation'
-  size: 1024
+  size: 512                    # This will be dataset patch_size X reduce_size
   output_theta: 6
   fr_channels: [225, 128, 64, 32]
   reg_normalization: True      # this assumes much memory
 
 trainer:                       
   gpus: 1
-  max_epochs: 100
+  max_epochs: 1
   accumulate_grad_batches: 5
   gradient_clip_val: 0.5
   log_every_n_steps: 10

@@ -79,6 +79,7 @@ class Extraction(nn.Module):
 
     def forward(self, x, y):
         if hasattr(self, 'vgg_model'):
+            # TODO 어떻게 gray scale 이미지로 할 수 있는 방법 없나
             assert x.shape[1] == 3 and y.shape[1] == 3,\
                 'VGG model takes 3 chennel images.'
 
