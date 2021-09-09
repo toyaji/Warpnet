@@ -8,7 +8,7 @@ from .warpnet import WarpNet
 from .transformation import GeometricTnf
 
 class WarpModel(pl.LightningModule):
-    def __init__(self, model_params, loader_params, loss_params) -> None:
+    def __init__(self, model_params, loader_params, opt_params) -> None:
         super().__init__()
         # load the model
         self.model = WarpNet(**model_params)
@@ -19,8 +19,9 @@ class WarpModel(pl.LightningModule):
         self.num_workers = loader_params.num_workers
         self.shuffle = loader_params.shuffle
         self.lr = loader_params.learning_rate
-        self.l2_lambda = loss_params.l2_lambda
-        self.weight_decay = loss_params.weight_decay
+        self.l2_lambda = opt_params.l2_lambda
+        self.weight_decay = opt_params.weight_decay
+        self.lr_lambda = opt_params.lr_lambda
         
         # save hprams for log
         self.save_hyperparameters(model_params)
@@ -30,7 +31,7 @@ class WarpModel(pl.LightningModule):
         # TODO adam parameter setting 좀 더 확인하기
         optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
-            'scheduler': LambdaLR(optimazier, lr_lambda=lambda step: 0.95*step),
+            'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: self.lr_lambda*epoch),
             'name': 'leraning_rate'
         }
         return [optimazier], [lr_scheduler]
