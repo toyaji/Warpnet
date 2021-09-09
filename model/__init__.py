@@ -30,18 +30,20 @@ class WarpModel(pl.LightningModule):
         # TODO adam parameter setting 좀 더 확인하기
         optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
-            'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: 0.95*epoch),
+            'scheduler': LambdaLR(optimazier, lr_lambda=lambda step: 0.95*step),
             'name': 'leraning_rate'
         }
         return [optimazier], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
         y, x = batch
+        b = x.size()[0] 
+
         origin = x.clone().detach()
         theta = self.model(x, y)
         aligned = self.transformer(origin, theta)
-        theta = theta.view(self.batch_size, 2, 3)
-        # to give l2 reglurize on theta 
+        theta = theta.view(b, 2, 3)
+        # to give l2 reglurize on theta
         l2_loss = self.l2_lambda * torch.norm(theta[:, :, :2], p=2)
         loss = F.mse_loss(aligned, y) + l2_loss
 
