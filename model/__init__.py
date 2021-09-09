@@ -18,7 +18,7 @@ class WarpModel(pl.LightningModule):
         self.batch_size = loader_params.batch_size
         self.num_workers = loader_params.num_workers
         self.shuffle = loader_params.shuffle
-        self.lr = loader_params.learning_rate
+        self.lr = opt_params.learning_rate
         self.l2_lambda = opt_params.l2_lambda
         self.weight_decay = opt_params.weight_decay
         self.lr_lambda = opt_params.lr_lambda
