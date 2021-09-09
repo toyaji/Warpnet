@@ -12,7 +12,7 @@ dataset:
   reduce_size: 0.5
 
 dataloader:
-  batch_size: 4
+  batch_size: 10
   shuffle: True
   num_workers: 4
   learning_rate: 1.0e-8
@@ -29,13 +29,14 @@ model:
 trainer:                       
   gpus: 1
   max_epochs: 1
-  accumulate_grad_batches: 5
+  accumulate_grad_batches: 1
   gradient_clip_val: 0.5
   log_every_n_steps: 10
   flush_logs_every_n_steps: 100
   auto_lr_find: True
   #fast_dev_run: 1          # This is for test - it will cause error for validation step
 
-loss:
+optimizer:
   l2_lambda: 10             # set for l2 regularization on theta size
   weight_decay: 1
+  lr_lambda: 0.95
