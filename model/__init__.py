@@ -29,7 +29,7 @@ class WarpModel(pl.LightningModule):
 
     def configure_optimizers(self):
         # TODO adam parameter setting 좀 더 확인하기
-        optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        optimazier = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
             'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: self.lr_lambda*epoch),
             'name': 'leraning_rate'
