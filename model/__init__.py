@@ -36,7 +36,9 @@ class WarpModel(pl.LightningModule):
         aligned = self.transformer(origin, theta)
         theta = theta.view(self.batch_size, 2, 3)
         # to give l2 reglurize on theta 
-        loss = F.mse_loss(aligned, y) + self.l2_lambda * torch.norm(theta[:, :, :2], p=2)
+        l2_loss = self.l2_lambda * torch.norm(theta[:, :, :2], p=2)
+        print(l2_loss)
+        loss = F.mse_loss(aligned, y) + l2_loss
 
         # following code is for memory leak debug
         """
