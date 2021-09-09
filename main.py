@@ -1,4 +1,5 @@
 import warnings
+from pytorch_lightning import callbacks
 
 from torch.utils.data.dataset import ConcatDataset, random_split
 from pytorch_lightning import Trainer
@@ -28,7 +29,9 @@ def main(config):
 
     # instantiate trainer
     logger = TensorBoardLogger('logs/', **config.log)
-    trainer = Trainer(logger=logger, **config.trainer)
+    checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=5)
+    trainer = Trainer(logger=logger, callbacks=[checkpoint_callback], **config.trainer)
+
     
     # start training!
     trainer.fit(model)

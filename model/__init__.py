@@ -17,6 +17,10 @@ class WarpModel(pl.LightningModule):
         self.num_workers = loader_params.num_workers
         self.shuffle = loader_params.shuffle
         self.lr = loader_params.learning_rate
+        
+        # save hprams for log
+        self.save_hyperparameters(model_params)
+        self.save_hyperparameters(loader_params)
 
     def configure_optimizers(self):
         # TODO params 분리되 되는듯... 여기다가 앞에 CNN gep 붙이는거 붙여되 되겠네
