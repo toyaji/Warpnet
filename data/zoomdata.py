@@ -42,6 +42,7 @@ class ZoomLZoomData(Dataset):
             self.base_paths = sorted(list((self.apath / "test").glob("*")))
     
     def _scan(self, idx):
+        # TODO gray scale 로 읽고 사이즈 줄여서 학습속도 빠르게 해보기
         (target_idx, source_idx) = self.scale_idx
         base_path = self.base_paths[idx] / self.get_from_dir
         target_path = base_path / "{:05d}.{}".format(target_idx, self.img_ext)

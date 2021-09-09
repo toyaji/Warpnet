@@ -24,7 +24,7 @@ model:
   fr_channels: [225, 128, 64, 32]
   reg_normalization: True      # this assumes much memory
 
-trainer:                       # TODO main trainer lightning module params
+trainer:                       
   gpus: 1
   max_epochs: 100
   accumulate_grad_batches: 5
@@ -35,4 +35,5 @@ trainer:                       # TODO main trainer lightning module params
   #fast_dev_run: 1          # This is for test - it will cause error for validation step
 
 loss:
-  l2_lambda: 1              # set for l2 regularization on theta size
+  l2_lambda: 10             # set for l2 regularization on theta size
+  weight_decay: 1

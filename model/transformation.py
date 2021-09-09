@@ -123,8 +123,7 @@ class HomographyGridGen(nn.Module):
 
         grid_X = expand_dim(self.grid_X,0,b)
         grid_Y = expand_dim(self.grid_Y,0,b)
-        # FIXME 여기서 requires grad false  인 애들이 cuda 로 안가서 에러남
-        # print(grid_X.is_cuda, h0.is_cuda, grid_Y.is_cuda, h1.is_cuda, h2.is_cuda)
+
         grid_Xp = grid_X*h0+grid_Y*h1+h2
         grid_Yp = grid_X*h3+grid_Y*h4+h5
         k = grid_X*h6+grid_Y*h7+h8

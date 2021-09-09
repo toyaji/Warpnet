@@ -3,6 +3,7 @@ import pytorch_lightning as pl
 
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import LambdaLR
 from .warpnet import WarpNet
 from .transformation import GeometricTnf
 
@@ -19,15 +20,20 @@ class WarpModel(pl.LightningModule):
         self.shuffle = loader_params.shuffle
         self.lr = loader_params.learning_rate
         self.l2_lambda = loss_params.l2_lambda
+        self.weight_decay = loss_params.weight_decay
         
         # save hprams for log
         self.save_hyperparameters(model_params)
         self.save_hyperparameters(loader_params)
 
     def configure_optimizers(self):
-        # TODO params 분리되 되는듯... 여기다가 앞에 CNN gep 붙이는거 붙여되 되겠네
-        optimazier = torch.optim.Adam(self.parameters(), lr=self.lr)
-        return optimazier
+        # TODO adam parameter setting 좀 더 확인하기
+        optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        lr_scheduler = {
+            'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: 0.95*epoch),
+            'name': 'leraning_rate'
+        }
+        return [optimazier], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
         y, x = batch
@@ -37,7 +43,6 @@ class WarpModel(pl.LightningModule):
         theta = theta.view(self.batch_size, 2, 3)
         # to give l2 reglurize on theta 
         l2_loss = self.l2_lambda * torch.norm(theta[:, :, :2], p=2)
-        print(l2_loss)
         loss = F.mse_loss(aligned, y) + l2_loss
 
         # following code is for memory leak debug
@@ -69,7 +74,6 @@ class WarpModel(pl.LightningModule):
         self.val_set = val_set
         self.test_set = test_set
 
-    # TODO data scale 별로 다 붙이기
     def train_dataloader(self):
         dataloader = DataLoader(self.train_set, self.batch_size, self.shuffle, num_workers=self.num_workers)
         return dataloader
