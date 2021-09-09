@@ -14,7 +14,7 @@ dataset:
 dataloader:
   batch_size: 10
   shuffle: True
-  num_workers: 4
+  num_workers: 8
 
 model:
   vgg_layer: 'relu5_4'
