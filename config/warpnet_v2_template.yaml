@@ -1,12 +1,12 @@
 log:
-  name: '20210908'
-  version: 'working_v1'
+  name: 'working_v1'
+  version: '20210908'        
 
 dataset:
   data_dir: 'C:/Users/happy/Documents/jupyter scripts/SRraw/NLST/dataset/SRRAW'
-  get_from_dir: "cropped"     # onlycrop / cropped / aligned
+  get_from_dir: "cropped"      # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
-  patch_size: 1024          # -1 for full size image (no crop)
+  patch_size: 1024             # -1 for full size image (no crop)
   raw_image: False             # if True, belowing in_channel param sould be 4
 
 dataloader:

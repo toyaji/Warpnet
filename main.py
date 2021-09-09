@@ -1,6 +1,4 @@
 import warnings
-from pytorch_lightning import callbacks
-
 from torch.utils.data.dataset import ConcatDataset, random_split
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -30,6 +28,7 @@ def main(config):
     # instantiate trainer
     logger = TensorBoardLogger('logs/', **config.log)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=5)
+    #profiler=PyTorchProfiler(sort_by_key="cuda_memory_usage")
     trainer = Trainer(logger=logger, callbacks=[checkpoint_callback], **config.trainer)
 
     
@@ -38,6 +37,6 @@ def main(config):
 
     
 if __name__ == "__main__":
-    from options import load_config
-    config = load_config("config/warpnet_v2_template.yaml")
+    from options import load_config_from_args
+    config = load_config_from_args()
     main(config)
