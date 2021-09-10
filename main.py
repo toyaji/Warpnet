@@ -28,7 +28,7 @@ def main(config):
     # instantiate trainer
     logger = TensorBoardLogger('logs/', **config.log)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=5)
-    early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=50)
+    early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=50, patience=10)
     #profiler=PyTorchProfiler(sort_by_key="cuda_memory_usage")
     trainer = Trainer(logger=logger, callbacks=[checkpoint_callback, early_stop_callback], **config.trainer)
 

@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from .warpnet import WarpNet
 from .transformation import GeometricTnf
 
@@ -21,17 +21,20 @@ class WarpModel(pl.LightningModule):
         self.lr = opt_params.learning_rate
         self.l2_lambda = opt_params.l2_lambda
         self.weight_decay = opt_params.weight_decay
-        self.lr_lambda = opt_params.lr_lambda
         
         # save hprams for log
         self.save_hyperparameters(model_params)
         self.save_hyperparameters(loader_params)
 
+    def forward(self, x, y):
+        return self.model(x, y)
+
     def configure_optimizers(self):
         # TODO adam parameter setting 좀 더 확인하기
         optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
-            'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: self.lr_lambda*epoch),
+            'scheduler': ReduceLROnPlateau(optimazier, patience=10),
+            'monitor': "val_loss",
             'name': 'leraning_rate'
         }
         return [optimazier], [lr_scheduler]
@@ -60,8 +63,8 @@ class WarpModel(pl.LightningModule):
             except: pass
         f.close()
         """
-        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log("l2_loss", l2_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("l2_loss", l2_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -70,7 +73,7 @@ class WarpModel(pl.LightningModule):
         theta = self.model(x, y)
         aligned = self.transformer(origin, theta)
         loss = F.mse_loss(aligned, y)
-        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def set_dataset(self, train_set, val_set, test_set):

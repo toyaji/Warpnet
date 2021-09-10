@@ -11,13 +11,13 @@ mutipliers = vgg_multiplier(1, 2, 4, 8, 16)
 
 class WarpNet(nn.Module):
     def __init__(self,
-                 vgg_layer='relu4_4',
-                 corr_normalize=True, 
+                 vgg_layer='relu5_4',
+                 corr_normalize=False, 
                  matching_type='correlation',
-                 size=1024,
+                 size=512,
                  output_theta=6,
                  fr_channels=[225, 128, 64, 32],
-                 reg_normalization=True):
+                 reg_normalization=False):
         
         super(WarpNet, self).__init__()
         
