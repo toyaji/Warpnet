@@ -29,7 +29,7 @@ class WarpModel(pl.LightningModule):
 
     def configure_optimizers(self):
         # TODO adam parameter setting 좀 더 확인하기
-        optimazier = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
             'scheduler': LambdaLR(optimazier, lr_lambda=lambda epoch: self.lr_lambda*epoch),
             'name': 'leraning_rate'
@@ -60,7 +60,8 @@ class WarpModel(pl.LightningModule):
             except: pass
         f.close()
         """
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("l2_loss", l2_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -69,7 +70,7 @@ class WarpModel(pl.LightningModule):
         theta = self.model(x, y)
         aligned = self.transformer(origin, theta)
         loss = F.mse_loss(aligned, y)
-        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def set_dataset(self, train_set, val_set, test_set):

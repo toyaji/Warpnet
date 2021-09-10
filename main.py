@@ -1,7 +1,7 @@
 import warnings
 from torch.utils.data.dataset import ConcatDataset, random_split
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.profiler import PyTorchProfiler
 from model import WarpModel
@@ -28,8 +28,9 @@ def main(config):
     # instantiate trainer
     logger = TensorBoardLogger('logs/', **config.log)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=5)
+    early_stop_callback = EarlyStopping(monitor="val_loss", min_delta=50)
     #profiler=PyTorchProfiler(sort_by_key="cuda_memory_usage")
-    trainer = Trainer(logger=logger, callbacks=[checkpoint_callback], **config.trainer)
+    trainer = Trainer(logger=logger, callbacks=[checkpoint_callback, early_stop_callback], **config.trainer)
 
     
     # start training!
