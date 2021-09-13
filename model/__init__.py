@@ -8,11 +8,12 @@ from .warpnet import WarpNet
 from .transformation import GeometricTnf
 
 class WarpModel(pl.LightningModule):
-    def __init__(self, model_params, loader_params, opt_params) -> None:
+    def __init__(self, geometry, model_params, loader_params, opt_params) -> None:
         super().__init__()
         # load the model
         self.model = WarpNet(**model_params)
-        self.transformer = GeometricTnf('affine', size=model_params.size)
+        self.transformer = GeometricTnf(geometry, 
+                                        size=model_params.size)
 
         # set dataloader paramters
         self.batch_size = loader_params.batch_size
@@ -21,6 +22,7 @@ class WarpModel(pl.LightningModule):
         self.lr = opt_params.learning_rate
         self.l2_lambda = opt_params.l2_lambda
         self.weight_decay = opt_params.weight_decay
+        self.geo_model = geometry
         
         # save hprams for log
         self.save_hyperparameters(model_params)
@@ -33,7 +35,7 @@ class WarpModel(pl.LightningModule):
         # TODO adam parameter setting 좀 더 확인하기
         optimazier = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         lr_scheduler = {
-            'scheduler': ReduceLROnPlateau(optimazier, patience=10),
+            'scheduler': ReduceLROnPlateau(optimazier, patience=7),
             'monitor': "val_loss",
             'name': 'leraning_rate'
         }
@@ -41,15 +43,10 @@ class WarpModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         y, x = batch
-        b = x.size()[0] 
-
         origin = x.clone().detach()
         theta = self.model(x, y)
         aligned = self.transformer(origin, theta)
-        theta = theta.view(b, 2, 3)
-        # to give l2 reglurize on theta
-        l2_loss = self.l2_lambda * torch.norm(theta[:, :, :2], p=2)
-        loss = F.mse_loss(aligned, y) + l2_loss
+        loss = F.mse_loss(aligned, y)
 
         # following code is for memory leak debug
         """
@@ -64,7 +61,6 @@ class WarpModel(pl.LightningModule):
         f.close()
         """
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log("l2_loss", l2_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
