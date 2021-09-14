@@ -34,7 +34,6 @@ def main(config):
     
     # start training!
     trainer.fit(model)
-    trainer.test(model)
     
 if __name__ == "__main__":
     from options import load_config_from_args

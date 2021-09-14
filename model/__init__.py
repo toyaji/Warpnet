@@ -72,6 +72,15 @@ class WarpModel(pl.LightningModule):
         self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
+    def test_step(self, batch, batch_idx):
+        y, x = batch
+        origin = x.clone().detach()
+        theta = self.model(x, y)
+        aligned = self.transformer(origin, theta)
+        loss = F.mse_loss(aligned, y)
+        self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+
     def set_dataset(self, train_set, val_set, test_set):
         self.train_set = train_set
         self.val_set = val_set

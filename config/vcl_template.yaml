@@ -41,5 +41,5 @@ trainer:
 optimizer:
   l2_lambda: 0             # set for l2 regularization on theta size
   learning_rate: 1.0e-6
-  weight_decay: 0.1
+  weight_decay: 0.5
   
