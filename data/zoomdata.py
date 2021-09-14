@@ -60,7 +60,9 @@ class ZoomLZoomData(Dataset):
             lr = np.expand_dims(lr, 2)
         else:
             hr = cv2.imread(str(target_path))
-            lr = cv2.imread(str(source_path)) 
+            lr = cv2.imread(str(source_path))
+            hr = cv2.cvtColor(hr, cv2.COLOR_BGR2RGB) 
+            lr = cv2.cvtColor(lr, cv2.COLOR_BGR2RGB) 
         return hr, lr
 
     def _get_focalscale(self, idx):
