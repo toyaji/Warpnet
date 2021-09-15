@@ -35,11 +35,11 @@ trainer:
   log_every_n_steps: 10
   flush_logs_every_n_steps: 100
   auto_lr_find: False
-  #resume_from_checkpoint: 'logs/opt_relu4_v1/20210910/checkpoints/epoch=64-step=3314.ckpt'
+  #resume_from_checkpoint: "logs/adamW07_rgb01_v2/20210914/checkpoints/epoch=98-step=6236.ckpt"
   #fast_dev_run: 1          # This is for test - it will cause error for validation step
 
 optimizer:
   l2_lambda: 0             # set for l2 regularization on theta size
   learning_rate: 1.0e-6
-  weight_decay: 0.5
+  weight_decay: 0.7
   

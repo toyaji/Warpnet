@@ -19,16 +19,16 @@ def main(config):
     test_set = ConcatDataset(test_data)
 
     length = [round(len(train_set)*0.8), round(len(train_set)*0.2)]
-    train_set, val_set = random_split(train_set, length)
+    #train_set, val_set = random_split(train_set, length)
 
     # load pytorch lightning model - TODO 요 부분 argparser 로 모델명 받게하기
     model = WarpModel(config.geometry, config.model, config.dataloader, config.optimizer)
-    model.set_dataset(train_set, val_set, test_set)
+    model.set_dataset(train_set, test_set, test_set)
 
     # instantiate trainer
     logger = TensorBoardLogger('logs/', **config.log)
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=5)
-    early_stop_callback = EarlyStopping(monitor="val_loss", patience=12)
+    early_stop_callback = EarlyStopping(monitor="val_loss", patience=20)
     #profiler=PyTorchProfiler(sort_by_key="cuda_memory_usage")
     trainer = Trainer(logger=logger, callbacks=[checkpoint_callback, early_stop_callback], **config.trainer)
     
