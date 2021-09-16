@@ -1,3 +1,6 @@
+# template
+/config
+
 # Log files
 /lightning_logs
 /logs
