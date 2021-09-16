@@ -7,9 +7,9 @@ dataset:
   get_from_dir: "cropped"      # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
   gray_scale: False            # TODO it does not work now for vgg layer only takes rgb channel 
-  patch_size: 1024             # -1 for full size image (no crop)
+  patch_size: 2048             # -1 for full size image (no crop)
   raw_image: False             # if True, belowing in_channel param sould be 4
-  reduce_size: 0.5
+  reduce_size: 0.25
 
 dataloader:
   batch_size: 20
