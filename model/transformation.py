@@ -67,7 +67,7 @@ class GeometricTnf(nn.Module):
             grid = grid*(self.padding_factor*self.crop_factor)
         # rescale grid according to offset_factor
 
-        rois =  F.grid_sample(x, grid, align_corners=True)
+        rois =  F.grid_sample(x, grid, align_corners=False)
         return rois
 
 class AffineGridGen(nn.Module):
@@ -84,7 +84,7 @@ class AffineGridGen(nn.Module):
         theta = theta.contiguous()
         batch_size = theta.size()[0]
         out_size = torch.Size((batch_size,self.out_ch,self.out_h,self.out_w))
-        return F.affine_grid(theta, out_size, align_corners=True)
+        return F.affine_grid(theta, out_size, align_corners=False)
 
 class HomographyGridGen(nn.Module):
     def __init__(self, out_h=240, out_w=240):

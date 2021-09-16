@@ -17,7 +17,7 @@ dataloader:
   num_workers: 16
 
 model:
-  vgg_layer: 'relu4_4'
+  vgg_layer: 'relu5_4'
   corr_normalize: False
   matching_type: 'correlation'
   size: 512                    # This will be dataset patch_size X reduce_size
