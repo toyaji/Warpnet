@@ -159,3 +159,13 @@ def get_1ch(raw):
     bayer[0::2, 1::2] = raw[..., 3]
 
     return bayer
+
+
+def central_crop(img, size=480):
+    h, w = img.shape[:2]
+  
+    th = int(round((h - size) / 2.))
+    tw = int(round((w - size) / 2.))
+    img = img[th:th+size, tw:tw+size, :]
+    
+    return img

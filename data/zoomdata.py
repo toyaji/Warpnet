@@ -32,7 +32,8 @@ class ZoomLZoomData(Dataset):
             hr = cv2.resize(hr, dsize=(0, 0), fx=self.reduce_size, fy=self.reduce_size, interpolation=cv2.INTER_LINEAR)
             lr = cv2.resize(lr, dsize=(0, 0), fx=self.reduce_size, fy=self.reduce_size, interpolation=cv2.INTER_LINEAR)
         hr, lr = common.augment([hr, lr])
-        return common.np2Tensor([hr, lr], rgb_range=1)
+        hr, lr = common.np2Tensor([hr, lr], rgb_range=1)
+        return lr, hr
 
     def __len__(self):
         return len(self.base_paths)

@@ -1,17 +1,27 @@
 import torch
 import pytorch_lightning as pl
 
+from torch.nn import Sequential
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchvision.transforms import CenterCrop, Normalize
+
 from .warpnet import WarpNet
 from .transformation import GeometricTnf
 
 class WarpModel(pl.LightningModule):
     def __init__(self, geometry, model_params, loader_params, opt_params) -> None:
         super().__init__()
+
+        # transforme preprocess - it will crop the image before feed into main net
+        self.preprocess = Sequential(CenterCrop(model_params.size - 32), 
+                                    Normalize((0.485, 0.456, 0.406), 
+                                              (0.229, 0.224, 0.225)))
         # load the model
         self.model = WarpNet(**model_params)
+
+
         self.transformer = GeometricTnf(geometry, 
                                         size=model_params.size)
 
@@ -29,6 +39,8 @@ class WarpModel(pl.LightningModule):
         self.save_hyperparameters(loader_params)
 
     def forward(self, x, y):
+        x = self.preprocess(x)
+        y = self.preprocess(y)
         return self.model(x, y)
 
     def configure_optimizers(self):
@@ -42,10 +54,9 @@ class WarpModel(pl.LightningModule):
         return [optimazier], [lr_scheduler]
 
     def training_step(self, batch, batch_idx):
-        y, x = batch
-        origin = x.clone().detach()
-        theta = self.model(x, y)
-        aligned = self.transformer(origin, theta)
+        x, y = batch
+        theta = self(x, y)
+        aligned = self.transformer(x, theta)
         loss = F.mse_loss(aligned, y)
 
         # following code is for memory leak debug
@@ -64,19 +75,17 @@ class WarpModel(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        y, x = batch
-        origin = x.clone().detach()
-        theta = self.model(x, y)
-        aligned = self.transformer(origin, theta)
+        x, y = batch
+        theta = self(x, y)
+        aligned = self.transformer(x, theta)
         loss = F.mse_loss(aligned, y)
         self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def test_step(self, batch, batch_idx):
-        y, x = batch
-        origin = x.clone().detach()
-        theta = self.model(x, y)
-        aligned = self.transformer(origin, theta)
+        x, y = batch
+        theta = self(x, y)
+        aligned = self.transformer(x, theta)
         loss = F.mse_loss(aligned, y)
         self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
