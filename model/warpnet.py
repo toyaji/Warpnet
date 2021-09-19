@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F 
 from collections import namedtuple
+
 from .vgg import VGG19
 from .transformation import GeometricTnf
 
@@ -12,18 +14,19 @@ mutipliers = vgg_multiplier(1, 2, 4, 8, 16)
 class WarpNet(nn.Module):
     def __init__(self,
                  vgg_layer='relu5_4',
-                 corr_normalize=False, 
+                 corr_normalize=True, 
                  matching_type='correlation',
                  size=512,
+                 buffer=16,
                  output_theta=6,
                  fr_channels=[225, 128, 64, 32],
-                 reg_normalization=False):
+                 reg_normalization=True):
         
         super(WarpNet, self).__init__()
         
         # set corr out size connector 
         m = getattr(mutipliers, vgg_layer)
-        self.corr_out_size = int((size/m)**2)
+        self.corr_out_size = int(((size - buffer*2)/m)**2)
 
         # set conv layers for each steps
         self.ext = Extraction(vgg_layer=vgg_layer)
@@ -128,13 +131,13 @@ class Correlation(torch.nn.Module):
 
 
 class Regression(nn.Module):
-    def __init__(self, input_size, output_dim=6, normalization=True, channels=[225,128,64,32]):
+    def __init__(self, input_size, output_dim=6, normalization=True, channels=[64,64,32,32]):
         super(Regression, self).__init__()
         num_layers = len(channels)
         # to make adaptive to input size change
         self.connector = nn.Sequential(
-            nn.Conv2d(input_size, 225, kernel_size=3, padding=1),
-            nn.BatchNorm2d(225, track_running_stats=False),
+            nn.Conv2d(input_size, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64, track_running_stats=False),
             nn.ReLU())
 
         nn_modules = list()
@@ -145,16 +148,34 @@ class Regression(nn.Module):
             if normalization:
                 nn_modules.append(nn.BatchNorm2d(ch_out, track_running_stats=False))
             nn_modules.append(nn.ReLU())
+
         self.body = nn.Sequential(*nn_modules)
 
         # lienar map to theata output
-        self.linear1 = nn.Linear(ch_out * input_size, 1024)
-        self.linear2 = nn.Linear(1024, output_dim)
+        self.fc1 = nn.Linear(ch_out * input_size, 1024)
+        self.fc2 = nn.Linear(1024, output_dim)
 
     def forward(self, x):
         x = self.connector(x)
         x = self.body(x)
         x = x.contiguous().view(x.size(0), -1)
-        x = self.linear1(x)
-        x = self.linear2(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+
+        if self.dropout:
+            x = F.dropout(self.fc1(x), p=0.5)
+            x = F.dropout(self.fc2(x), p=0.5)
+        else:
+            x = self.fc1(x)
+            x = self.fc2(x) # params [Nx6]
+
         return x
+
+
+
+if __name__ == '__main__':
+
+    example = torch.zeros(2, 3, 480, 480)
+    net = WarpNet()
+
+    result = net(example, example)

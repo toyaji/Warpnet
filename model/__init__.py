@@ -15,8 +15,8 @@ class WarpModel(pl.LightningModule):
         super().__init__()
 
         # transforme preprocess - it will crop the image before feed into main net
-        self.preprocess = Sequential(CenterCrop(model_params.size - 32), 
-                                    Normalize((0.485, 0.456, 0.406), 
+        self.preprocess = Sequential(CenterCrop(model_params.size - model_params.buffer*2), 
+                                    Normalize((0.485, 0.456, 0.406),
                                               (0.229, 0.224, 0.225)))
         # load the model
         self.model = WarpNet(**model_params)
