@@ -1,6 +1,6 @@
 log:
-  name: 'working_v1'
-  version: '20210908'        
+  name: '20210908' 
+  version: 'working_v1'       
 
 dataset:
   data_dir: '/home/vcl/Documents/paul/NLST/dataset/SRRAW'
@@ -23,8 +23,9 @@ model:
   size: 512                    # This will be dataset patch_size X reduce_size
   buffer: 16
   output_theta: 6
-  fr_channels: [225, 128, 64, 32]
+  fr_channels: [64, 64, 32, 32]
   reg_normalization: True      # this assumes much memory
+  reg_drop: True
 
 geometry: "affine"
   

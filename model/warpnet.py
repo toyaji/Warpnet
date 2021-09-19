@@ -20,7 +20,8 @@ class WarpNet(nn.Module):
                  buffer=16,
                  output_theta=6,
                  fr_channels=[225, 128, 64, 32],
-                 reg_normalization=True):
+                 reg_normalization=True,
+                 reg_drop=True):
         
         super(WarpNet, self).__init__()
         
@@ -34,7 +35,8 @@ class WarpNet(nn.Module):
         self.reg = Regression(input_size=self.corr_out_size,
                               output_dim=output_theta,
                               channels=fr_channels,
-                              normalization=reg_normalization)
+                              normalization=reg_normalization,
+                              drop=reg_drop)
         
 
     def forward(self, x, y):
@@ -131,13 +133,17 @@ class Correlation(torch.nn.Module):
 
 
 class Regression(nn.Module):
-    def __init__(self, input_size, output_dim=6, normalization=True, channels=[64,64,32,32]):
+    def __init__(self, input_size, output_dim=6, normalization=True, channels=[64,64,32,32], drop=True):
         super(Regression, self).__init__()
+        
+        self.dropout = drop
+        
         num_layers = len(channels)
+
         # to make adaptive to input size change
         self.connector = nn.Sequential(
-            nn.Conv2d(input_size, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, track_running_stats=False),
+            nn.Conv2d(input_size, channels[0], kernel_size=3, padding=1),
+            nn.BatchNorm2d(channels[0], track_running_stats=False),
             nn.ReLU())
 
         nn_modules = list()
@@ -159,8 +165,6 @@ class Regression(nn.Module):
         x = self.connector(x)
         x = self.body(x)
         x = x.contiguous().view(x.size(0), -1)
-        x = self.fc1(x)
-        x = self.fc2(x)
 
         if self.dropout:
             x = F.dropout(self.fc1(x), p=0.5)

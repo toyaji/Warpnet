@@ -5,7 +5,7 @@ from torch.nn import Sequential
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.transforms import CenterCrop, Normalize
+from torchvision.transforms import Compose, CenterCrop, Normalize
 
 from .warpnet import WarpNet
 from .transformation import GeometricTnf
@@ -15,9 +15,9 @@ class WarpModel(pl.LightningModule):
         super().__init__()
 
         # transforme preprocess - it will crop the image before feed into main net
-        self.preprocess = Sequential(CenterCrop(model_params.size - model_params.buffer*2), 
-                                    Normalize((0.485, 0.456, 0.406),
-                                              (0.229, 0.224, 0.225)))
+        self.preprocess = Compose([CenterCrop(model_params.size - model_params.buffer*2), 
+                                   Normalize((0.485, 0.456, 0.406),
+                                             (0.229, 0.224, 0.225))])
         # load the model
         self.model = WarpNet(**model_params)
 
