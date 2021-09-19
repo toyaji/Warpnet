@@ -13,8 +13,8 @@ warnings.filterwarnings('ignore')
 def main(config):
 
     # dataset settting
-    train_data = [ZoomLZoomData(config.dataset, scale_idx=(1, i), train=True) for i in range(2, 8)]
-    test_data = [ZoomLZoomData(config.dataset, scale_idx=(1, i), train=False) for i in range(2, 8)]
+    train_data = [ZoomLZoomData(config.dataset, scale_idx=(1, i), train=True) for i in range(2, 6)]
+    test_data = [ZoomLZoomData(config.dataset, scale_idx=(1, i), train=False) for i in range(2, 6)]
     train_set = ConcatDataset(train_data)
     test_set = ConcatDataset(test_data)
 

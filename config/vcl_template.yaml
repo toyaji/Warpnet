@@ -4,7 +4,7 @@ log:
 
 dataset:
   data_dir: '/home/vcl/Documents/paul/NLST/dataset/SRRAW'
-  get_from_dir: "cropped"      # onlycrop / cropped / aligned
+  get_from_dir: "cropped_buffer"      # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
   gray_scale: False            # TODO it does not work now for vgg layer only takes rgb channel 
   patch_size: 2048             # -1 for full size image (no crop)
@@ -18,7 +18,7 @@ dataloader:
 
 model:
   vgg_layer: 'relu5_4'
-  corr_normalize: False
+  corr_normalize: True
   matching_type: 'correlation'
   size: 512                    # This will be dataset patch_size X reduce_size
   output_theta: 6
@@ -29,8 +29,8 @@ geometry: "affine"
   
 trainer:                       
   gpus: 1
-  max_epochs: 200
-  accumulate_grad_batches: 2
+  max_epochs: 100
+  accumulate_grad_batches: 1
   gradient_clip_val: 0.52
   log_every_n_steps: 10
   flush_logs_every_n_steps: 100
@@ -41,5 +41,5 @@ trainer:
 optimizer:
   l2_lambda: 0             # set for l2 regularization on theta size
   learning_rate: 1.0e-6
-  weight_decay: 0.7
+  weight_decay: 1.0e-2
   
