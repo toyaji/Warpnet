@@ -7,7 +7,7 @@ dataset:
   get_from_dir: "cropped"      # onlycrop / cropped / aligned
   img_ext: "JPG"               # ARW / JPG / ...
   gray_scale: False            # TODO it does not work now for vgg layer only takes rgb channel 
-  patch_size: 2048             # -1 for full size image (no crop)
+  patch_size: 1024             # -1 for full size image (no crop)
   raw_image: False             # if True, belowing in_channel param sould be 4
   reduce_size: 0.25
 
@@ -20,10 +20,10 @@ model:
   vgg_layer: 'relu5_4'
   corr_normalize: True
   matching_type: 'correlation'
-  size: 512                    # This will be dataset patch_size X reduce_size
+  size: 256                    # This will be dataset patch_size X reduce_size
   buffer: 16
   output_theta: 6
-  fr_channels: [64, 64, 32, 32]
+  fr_channels: [32, 32, 32, 32]
   reg_normalization: True      # this assumes much memory
   reg_drop: True
 
@@ -42,6 +42,6 @@ trainer:
 
 optimizer:
   l2_lambda: 0             # set for l2 regularization on theta size
-  learning_rate: 1.0e-6
-  weight_decay: 1.0e-2
+  learning_rate: 1.0e-5
+  weight_decay: 1.0e-4
   
